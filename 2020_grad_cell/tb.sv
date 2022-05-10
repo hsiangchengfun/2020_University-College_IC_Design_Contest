@@ -1,7 +1,7 @@
 `timescale 1ns/10ps
 `define CYCLE      20.0  
 `define SDFFILE    "./SME_syn.sdf"
-`define End_CYCLE  1000000
+`define End_CYCLE  100000000000
 `define PAT        "Btestdata.txt"
 module testfixture();
 
@@ -38,16 +38,16 @@ SME u_SME (.clk(clk),
 
 always begin #(`CYCLE/2) clk = ~clk; end
 
-initial begin
-    $fsdbDumpfile("SME.fsdb");
-    $fsdbDumpvars;
-    $fsdbDumpMDA;
-end
-
 //initial begin
-//    $dumpfile("SME.vcd");
-//    $dumpvars;
+//    $fsdbDumpfile("SME.fsdb");
+//    $fsdbDumpvars;
+//    $fsdbDumpMDA;
 //end
+
+initial begin
+    $dumpfile("SME.vcd");
+    $dumpvars;
+end
 
 initial begin
     $display("----------------------");
