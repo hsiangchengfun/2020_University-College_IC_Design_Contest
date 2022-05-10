@@ -15,7 +15,7 @@ output valid;
 reg [4:0] match_index;
 reg [5:0] str_ind;
 reg [4:0] pat_ind,pat_ind_star;
-reg [4:0] m_counter,m_counter_star; 
+reg [4:0] m_counter,m_counter_star; //match counter
 
 reg [3:0] current_state,next_state,current_state_process,next_state_process;
 reg [7:0] ipt_string [32-1:0];
@@ -39,19 +39,38 @@ parameter s_process_done_unmatch = 4'b0111;
 parameter result = 4'b1000;
 
 
-reg [2-1:0]check_flag;
-assign valid = (next_state == result)? 1'b1:1'b0; 
-assign match = check_flag[0];
+
+// //here bug 
+// assign valid = (next_state == result)? 1'b1:1'b0; 
+// assign match =(next_state_process == s_process_done_match)? 1'b1:1'b0;
 
 
+
+reg valid;
 always @(posedge clk) begin
-    if(current_state == s_process_done_unmatch )
-        check_flag <= 2'b00;
-    else if  ( current_state_process == s_process_done_match)
-        check_flag <= 2'b01;
-    else check_flag <= 2'b10;
+    if( current_state == result)valid <= 1'b1;
+    else valid <= 1'b0;
 end
 
+
+reg match;
+// match
+always@(posedge clk) begin
+    if(reset) match <= 1'd0;
+    else if(next_state_process == s_process_done_match) match <= 1'd1;
+    else if(next_state_process == s_process_done_unmatch) match <= 1'd0;
+end
+
+
+
+reg [2-1:0] check_flag;
+
+always @(posedge clk) begin
+    if (current_state_process == s_process_done_match) check_flag <= 2'b01;
+    else if (current_state_process == s_process_done_unmatch) check_flag <= 2'b00;
+    else check_flag <= 2'b10;
+     
+end
 
 always@(posedge clk) begin
     if(reset) begin
@@ -68,21 +87,6 @@ always@(posedge clk) begin
 end
 
 
-integer  i;
-always@(posedge clk or posedge reset) begin
-    if(reset) begin
-        str_counter <= 0;
-        for(i=0;i<32;i=i+1) begin
-            ipt_string[i] <= 8'd0;
-        end
-    end
-    else if(isstring == 1'd1)begin
-        ipt_string[str_counter] <= chardata;
-        str_counter <= str_counter + 1'b1 ;
-
-    end 
-    else if( current_state == result || current_state == IDLE)str_counter <= 0;
-end
 
 
 
@@ -97,7 +101,6 @@ always@(posedge clk) begin
         current_state_process <= next_state_process;
     end
 end
-
 
 
 always@(*) begin
@@ -133,7 +136,6 @@ always@(*) begin
 end
 
 
-
 always @(*) begin
     if(current_state == s_process)begin
         case(current_state_process)
@@ -151,7 +153,7 @@ always @(*) begin
             end
             
             s_process_check_match:begin
-                if( ipt_pattern[pat_counter - 1'b1] == 8'h24 ) begin 
+                if( ipt_pattern[pat_counter - 1'b1] == 8'h24 ) begin // if last is $
                     if(pat_counter == m_counter + 1'b1) next_state_process <= s_process_done_match;
                     else next_state_process <= s_process_done_unmatch;
                 end
@@ -184,7 +186,7 @@ end
 
 
 always@(posedge clk) begin
-    if(reset || next_state == result) begin
+    if(reset || current_state == result) begin
         
         str_ind <= 0;
         pat_ind <= 0 ;
@@ -204,13 +206,13 @@ always@(posedge clk) begin
             if(pat_ind == 5'b00000) match_index <= str_ind;
     
     
-            if( (ipt_string[str_ind] == ipt_pattern[pat_ind]) || (ipt_pattern[pat_ind]== 8'h2E))begin
+            if( (ipt_string[str_ind] == ipt_pattern[pat_ind]) || (ipt_pattern[pat_ind]== 8'h2e))begin
                 str_ind <= str_ind + 1'b1 ;
                 pat_ind <= pat_ind + 1'b1 ;
                 m_counter <= m_counter + 1'b1 ;
                 
             end
-            // ^ 
+
             else if (ipt_pattern[pat_ind] == 8'h5E )begin
                 if( (str_ind == 6'b000000 ||  ipt_string[str_ind] == 8'h20) && (( ipt_string[str_ind + 1'b1] == ipt_pattern[pat_ind + 1'b1]) || ipt_string[str_ind + 1'b1] == 8'h2E))begin
                     str_ind <= str_ind + 1'b1 ;
@@ -219,9 +221,10 @@ always@(posedge clk) begin
                     if( ipt_string[str_ind] == 8'h20 )match_index <= str_ind + 1'b1 ;
                     else match_index <= str_ind ;
                 end
-                else begin
+                else begin//no match
                     pat_ind <= pat_ind ;
                     m_counter <= 5'b00000 ;
+                    // str_ind <= str_ind + 1'b1 ;
                     if(pat_ind != 4'b0000)str_ind <= match_index + 1'b1;
                     else str_ind <= str_ind + 1'b1;
 
@@ -232,15 +235,17 @@ always@(posedge clk) begin
                 pat_ind <= pat_ind + 1'b1 ;
                 str_ind <= str_ind + 1'b1 ; 
                 m_counter <= m_counter + 1'b1 ;
+                // if(pat_ind == 0)match_index <= str_ind;
             end
 
-            // *
+
             else if (ipt_pattern[pat_ind] == 8'h2A)begin
                 
                 str_ind <= str_ind ;
                 pat_ind <= pat_ind + 1'b1;
                 pat_ind_star <= pat_ind + 1'b1;
                 m_counter_star <= m_counter + 1'b1;
+                // match_index <= match_index + 1'b1;
                 m_counter <= m_counter + 1'b1;
                 star_flag <= 1'b1;
                 if(pat_ind == 0)match_index<= str_ind;
@@ -273,8 +278,30 @@ always@(posedge clk) begin
 end
 
 
+//ipt_string
+integer  i;
+always@(posedge clk or posedge reset) begin
+    if(reset) begin
+        for(i=0;i<32;i=i+1) begin
+            ipt_string[i] <= 8'd0;
+        end
+    end
+    else if(current_state == result&& next_state == s_string) ipt_string[5'd0] <= chardata;
+    else if(isstring == 1'd1) ipt_string[str_counter] <= chardata;
+end
 
+//string counter
+reg [5:0] str_counter_reg;
+always@(*) begin
+    if(current_state == result&& next_state == s_string) str_counter <= 6'd0;
+    else if(current_state == IDLE&& next_state == s_string) str_counter <= 6'd0;
+    else if(isstring == 1'd1) str_counter <= str_counter_reg + 6'd1;
+    else str_counter <= str_counter_reg;
+end
 
-
+always@(posedge clk or posedge reset) begin
+    if(reset) str_counter_reg <= 6'd0;
+    else if(isstring == 1'd1) str_counter_reg <= str_counter;
+end
 
 endmodule
