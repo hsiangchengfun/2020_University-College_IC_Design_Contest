@@ -40,7 +40,7 @@ parameter result = 4'b1000;
 // //here bug 
 // assign valid = (next_state == result)? 1'b1:1'b0; 
 // assign match =(next_state_process == s_process_done_match)? 1'b1:1'b0;
-// assign match = check_flag[0]; 
+assign match = check_flag[0]; 
 
 
 reg valid;
@@ -50,21 +50,21 @@ always @(posedge clk) begin
 end
 
 
-reg match;
-// match
-always@(posedge clk) begin
-    if(reset) match <= 1'd0;
-    else if(next_state_process == s_process_done_match) match <= 1'd1;
-    else if(next_state_process == s_process_done_unmatch) match <= 1'd0;
-end
+// reg match;
+// // match
+// always@(posedge clk) begin
+//     if(reset) match <= 1'd0;
+//     else if(next_state_process == s_process_done_match) match <= 1'd1;
+//     else if(next_state_process == s_process_done_unmatch) match <= 1'd0;
+// end
 
 
 
 reg [2-1:0] check_flag;
 
 always @(posedge clk) begin
-    if (current_state_process == s_process_done_match) check_flag <= 2'b01;
-    else if (current_state_process == s_process_done_unmatch) check_flag <= 2'b00;
+    if (next_state_process == s_process_done_match) check_flag <= 2'b01;
+    else if (next_state_process == s_process_done_unmatch) check_flag <= 2'b00;
     else check_flag <= 2'b10;
      
 end
