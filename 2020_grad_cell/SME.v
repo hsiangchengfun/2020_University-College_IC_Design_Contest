@@ -244,14 +244,11 @@ always@(posedge clk) begin
             // if is '^'
             else if (ipt_pattern[pat_ind] == 8'h5E )begin
                 // if is ( the first or the space ) and next is match => match counted
-                if( (str_ind == 6'b000000 ) && (( ipt_string[str_ind + 1'b1] == ipt_pattern[pat_ind + 1'b1]) || ipt_string[str_ind + 1'b1] == 8'h2E))begin
+                if( (ipt_string[pat_ind] == 8'h20 ) && (( ipt_string[str_ind + 1'b1] == ipt_pattern[pat_ind + 1'b1]) || ipt_string[str_ind + 1'b1] == 8'h2E))begin
                     str_ind <= str_ind + 1'b1 ;
                     pat_ind <= pat_ind + 1'b1 ;
                     m_counter <= m_counter + 1'b1 ;
-                    // if is the space =>¡@not first => give str index +1
-                    if( ipt_string[str_ind] == 8'h20 )match_index <= str_ind + 1'b1 ;
-                    //if is the first => give str index (0)
-                    else match_index <= str_ind ;
+                    match_index <= match_index + 1'b1 ;
                 end
 
                 else if( (str_ind == 6'b000000 ) && (( ipt_string[str_ind ] == ipt_pattern[pat_ind + 1'b1]) || ipt_string[str_ind + 1'b1] == 8'h2E))begin
@@ -291,7 +288,6 @@ always@(posedge clk) begin
                 // match_index <= match_index + 1'b1;
                 m_counter <= m_counter + 1'b1;
                 star_flag <= 1'b1;
-                if(pat_ind == 0)match_index<= str_ind;
 
             end
             // if had been starred and encounter diff and isn't '.' => 
