@@ -244,14 +244,14 @@ always@(posedge clk) begin
             // if is '^'
             else if (ipt_pattern[pat_ind] == 8'h5E )begin
                 // if is ( the first or the space ) and next is match => match counted
-                if( (ipt_string[pat_ind] == 8'h20 ) && (( ipt_string[str_ind + 1'b1] == ipt_pattern[pat_ind + 1'b1]) || ipt_string[str_ind + 1'b1] == 8'h2E))begin
+                if( (ipt_string[pat_ind] == 8'h20 ) && (( ipt_string[str_ind + 1'b1] == ipt_pattern[pat_ind + 1'b1]) || ipt_pattern[pat_ind + 1'b1] == 8'h2E))begin
                     str_ind <= str_ind + 1'b1 ;
                     pat_ind <= pat_ind + 1'b1 ;
                     m_counter <= m_counter + 1'b1 ;
                     match_index <= match_index + 1'b1 ;
                 end
 
-                else if( (str_ind == 6'b000000 ) && (( ipt_string[str_ind ] == ipt_pattern[pat_ind + 1'b1]) || ipt_string[str_ind + 1'b1] == 8'h2E))begin
+                else if( (str_ind == 6'b000000 ) && (( ipt_string[str_ind ] == ipt_pattern[pat_ind + 1'b1]) || ipt_pattern[pat_ind + 1'b1] == 8'h2E))begin
                     str_ind <= str_ind + 1'b1 ;
                     pat_ind <= pat_ind + 1'b1 ;
                     m_counter <= m_counter + 1'b1 ;
@@ -267,12 +267,12 @@ always@(posedge clk) begin
                     // if is the fisrt char of pattern => shift one char
                     if(pat_ind == 4'b0000)str_ind <= str_ind + 1'b1;
                     // if had been match many chars => shift to match index
-                    else str_ind <= match_index + 1'b1;
+                    // else str_ind <= match_index + 1'b1;
 
                 end
             end
             // if is $ and (is on string's last or pattern star ) 
-            else if( ipt_pattern[pat_ind] == 8'h24 && ( str_ind == str_counter || ipt_string[str_ind] == 8'h20) )begin
+            else if( ipt_pattern[pat_ind] == 8'h24 && ( str_ind == str_counter || ipt_pattern[pat_ind]  == 8'h20) )begin
                 pat_ind <= pat_ind + 1'b1 ;
                 str_ind <= str_ind + 1'b1 ; 
                 m_counter <= m_counter + 1'b1 ;
@@ -291,7 +291,7 @@ always@(posedge clk) begin
 
             end
             // if had been starred and encounter diff and isn't '.' => 
-            else if( star_flag == 1'b1 &&  ipt_string[str_ind] != ipt_pattern[pat_ind] && ipt_string[str_ind] != 8'h2E)begin
+            else if( star_flag == 1'b1 &&  ipt_string[str_ind] != ipt_pattern[pat_ind] && ipt_pattern[pat_ind] != 8'h2E)begin
                 str_ind <= str_ind + 1'b1;
                 pat_ind <= pat_ind ;
                 m_counter <= m_counter_star;
