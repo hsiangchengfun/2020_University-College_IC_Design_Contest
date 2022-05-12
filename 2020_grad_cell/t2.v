@@ -24,6 +24,7 @@ reg done;
 reg star_flag;
 
 
+
 parameter IDLE = 4'b0000;
 parameter s_string = 4'b0001; 
 parameter s_pattern = 4'b0010; 
@@ -140,6 +141,8 @@ always@(*) begin
         end
     
         s_string: begin
+            // if(isstring == 1'b1) next_state <= s_string;
+            // else next_state <= s_pattern;
             if(isstring == 1'b0) next_state <= s_pattern;
             else next_state <= s_string;
         end
@@ -238,7 +241,8 @@ always@(posedge clk) begin
                 str_ind <= str_ind + 1'b1 ;
                 pat_ind <= pat_ind + 1'b1 ;
                 m_counter <= m_counter + 1'b1 ;
-                
+                // if(pat_ind == 5'b00000) match_index <= str_ind;
+
             end
 
             // if is '^'
@@ -248,7 +252,9 @@ always@(posedge clk) begin
                     str_ind <= str_ind + 1'b1 ;
                     pat_ind <= pat_ind + 1'b1 ;
                     m_counter <= m_counter + 1'b1 ;
-                    match_index <= match_index + 1'b1 ;
+                    if( ipt_string[str_ind] == 8'h20 )match_index <= str_ind + 1'b1 ;
+                    //if is the first => give str index (0)
+                    else match_index <= str_ind ;
                 end
 
                 else if( (str_ind == 6'b000000 ) && (( ipt_string[str_ind ] == ipt_pattern[pat_ind + 1'b1]) || ipt_pattern[pat_ind + 1'b1] == 8'h2E))begin
@@ -265,9 +271,9 @@ always@(posedge clk) begin
                     pat_ind <= pat_ind ;
                     m_counter <= 5'b00000 ;
                     // if is the fisrt char of pattern => shift one char
-                    if(pat_ind == 4'b0000)str_ind <= str_ind + 1'b1;
+                    if(pat_ind == 5'b00000)str_ind <= str_ind + 1'b1;
                     // if had been match many chars => shift to match index
-                    // else str_ind <= match_index + 1'b1;
+                    else str_ind <= match_index + 1'b1;
 
                 end
             end
@@ -276,6 +282,8 @@ always@(posedge clk) begin
                 pat_ind <= pat_ind + 1'b1 ;
                 str_ind <= str_ind + 1'b1 ; 
                 m_counter <= m_counter + 1'b1 ;
+                // if(pat_ind == 5'b00000) match_index <= str_ind;
+
             end
 
             // if is '*' => str don't mv because can be zero 
@@ -288,12 +296,14 @@ always@(posedge clk) begin
                 // match_index <= match_index + 1'b1;
                 m_counter <= m_counter + 1'b1;
                 star_flag <= 1'b1;
+                // if(pat_ind == 5'b00000) match_index <= str_ind;
+
 
             end
             // if had been starred and encounter diff and isn't '.' => 
             else if( star_flag == 1'b1 &&  ipt_string[str_ind] != ipt_pattern[pat_ind] && ipt_pattern[pat_ind] != 8'h2E)begin
                 str_ind <= str_ind + 1'b1;
-                pat_ind <= pat_ind ;
+                pat_ind <= pat_ind_star ;
                 m_counter <= m_counter_star;
                 
             end
